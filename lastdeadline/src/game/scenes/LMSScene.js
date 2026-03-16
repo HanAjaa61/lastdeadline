@@ -205,7 +205,7 @@ export default class LMSScene extends Phaser.Scene {
     this.submitTxt.setVisible(true)
 
     try {
-      const res = await fetch("http://localhost:3001/generate-soal", {
+      const res = await fetch("/api/aiProxy?type=generate-soal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ night: GameState.night }),
@@ -259,7 +259,7 @@ export default class LMSScene extends Phaser.Scene {
     this.submitTxt.setVisible(false)
 
     try {
-      const res = await fetch("http://localhost:3001/nilai-jawaban", {
+      const res = await fetch("/api/aiProxy?type=nilai-jawaban", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ soal: this.currentSoal, jawaban: this.jawabanInput }),
