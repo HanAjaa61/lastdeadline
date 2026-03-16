@@ -86,7 +86,7 @@ export default class GoputScene extends Phaser.Scene {
       const btnY = cy + 118
       this.add.rectangle(cx + 3, btnY + 3, 160, 36, 0x000000, 0.5)
       const btn    = this.add.rectangle(cx, btnY, 160, 36, 0x1a5c1a).setInteractive({ useHandCursor: true })
-      const btnTxt = this.add.text(cx, btnY, "[ BELI ]", {
+      const btnTxt = this.add.text(cx, btnY, "BELI", {
         fontSize: "16px", fontFamily: "minecraft", color: "#ffffff",
         stroke: "#0d2e0d", strokeThickness: 2
       }).setOrigin(0.5)
@@ -108,7 +108,7 @@ export default class GoputScene extends Phaser.Scene {
     this.add.rectangle(formX + 3, backY + 3, 180, 38, 0x000000, 0.4)
     const backBtn = this.add.rectangle(formX, backY, 180, 38, 0x1a4d1a)
       .setStrokeStyle(2, 0x44aa44).setInteractive({ useHandCursor: true })
-    const backTxt = this.add.text(formX, backY, "[ KEMBALI ]", {
+    const backTxt = this.add.text(formX, backY, "KEMBALI", {
       fontSize: "16px", fontFamily: "minecraft", color: "#aaffaa",
       stroke: "#0d2e0d", strokeThickness: 2
     }).setOrigin(0.5)

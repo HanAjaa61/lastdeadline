@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted } from "vue"
 import { startGame } from "./game/game"
+import MobileBlock from "./components/MobileBlock.vue"
 
 onMounted(() => {
   startGame("game-container")
@@ -8,6 +9,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <MobileBlock />
   <div id="game-container"></div>
 </template>
 

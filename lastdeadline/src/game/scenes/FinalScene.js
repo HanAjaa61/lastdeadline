@@ -78,7 +78,7 @@ export default class FinalScene extends Phaser.Scene {
           fontSize: "18px", fontFamily: "minecraft", color: "#ffff00"
         }).setOrigin(0.5)
 
-        const exitBtn = this.add.text(width / 2, height * 0.78, "[ EXIT KE MENU ]", {
+        const exitBtn = this.add.text(width / 2, height * 0.78, "EXIT KE MENU", {
           fontSize: "20px", fontFamily: "minecraft", color: "#aaaaaa"
         }).setOrigin(0.5).setInteractive({ useHandCursor: true })
 

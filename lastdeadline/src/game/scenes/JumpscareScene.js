@@ -19,9 +19,10 @@ export default class JumpscareScene extends Phaser.Scene {
     this.sound.play("glitchSfx",      { volume: 1.0 })
     this.sound.play("jumpscareAudio", { volume: 1.0 })
 
+    const maxZoom = 2.35
     const video = this.add.video(width / 2, height / 2, "jumpscareVideo")
     video.setOrigin(0.5)
-    video.setDisplaySize(width, height)
+    video.setDisplaySize(width * maxZoom * 1.1, height * maxZoom * 1.1)
     video.setDepth(5)
     video.play()
 
@@ -51,7 +52,7 @@ export default class JumpscareScene extends Phaser.Scene {
     this.cameras.main.setZoom(1)
     this.tweens.add({
       targets: this.cameras.main,
-      zoom: 1.35,
+      zoom: maxZoom,
       duration: 80,
       ease: "Expo.easeOut",
       onComplete: () => {
@@ -162,9 +163,9 @@ export default class JumpscareScene extends Phaser.Scene {
       }
     })
 
-    // Chromatic aberration simulasi — geser channel merah dan biru
-    const rgbRed  = this.add.rectangle(width / 2 - 6, height / 2, width, height, 0xff0000, 0.12).setDepth(6).setBlendMode(Phaser.BlendModes.ADD)
-    const rgbBlue = this.add.rectangle(width / 2 + 6, height / 2, width, height, 0x0000ff, 0.12).setDepth(6).setBlendMode(Phaser.BlendModes.ADD)
+    // Chromatic aberration simulasi
+    const rgbRed  = this.add.rectangle(width / 2 - 6, height / 2, width * maxZoom * 1.1, height * maxZoom * 1.1, 0xff0000, 0.12).setDepth(6).setBlendMode(Phaser.BlendModes.ADD)
+    const rgbBlue = this.add.rectangle(width / 2 + 6, height / 2, width * maxZoom * 1.1, height * maxZoom * 1.1, 0x0000ff, 0.12).setDepth(6).setBlendMode(Phaser.BlendModes.ADD)
     this.tweens.add({
       targets: [rgbRed, rgbBlue],
       alpha: 0,

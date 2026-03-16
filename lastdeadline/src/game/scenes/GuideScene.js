@@ -251,7 +251,7 @@ export default class GuideScene extends Phaser.Scene {
 
     const backBg = this.add.rectangle(width / 2, btnY, 260, 28, 0x001a00)
       .setStrokeStyle(1, 0x00ff41).setInteractive({ useHandCursor: true }).setDepth(20)
-    const backTxt = this.add.text(width / 2, btnY, "[ KEMBALI KE MENU ]", {
+    const backTxt = this.add.text(width / 2, btnY, "KEMBALI KE MENU", {
       fontSize: "14px", fontFamily: "minecraft", color: "#00ff41"
     }).setOrigin(0.5).setDepth(20)
 

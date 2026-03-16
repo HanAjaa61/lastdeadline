@@ -121,7 +121,7 @@ export default class LMSScene extends Phaser.Scene {
     this.add.rectangle(formX + 3, bBackY + 3, 170, 36, 0x000000, 0.4)
     const backBtn = this.add.rectangle(formX, bBackY, 170, 36, 0x003399)
       .setStrokeStyle(2, 0x6688ff).setInteractive({ useHandCursor: true }).setDepth(8)
-    const backTxt = this.add.text(formX, bBackY, "[ KEMBALI ]", {
+    const backTxt = this.add.text(formX, bBackY, "KEMBALI", {
       fontSize: "15px", fontFamily: "minecraft", color: "#aaddff",
       stroke: "#001166", strokeThickness: 2
     }).setOrigin(0.5).setDepth(9)
