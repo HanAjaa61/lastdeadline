@@ -8,7 +8,7 @@ import ClockScene from "./scenes/ClockScene"
 import GameScene from "./scenes/GameScene"
 import ComputerScene from "./scenes/ComputerScene"
 import LMSScene from "./scenes/LMSScene"
-import WiFiScene from "./scenes/WIFIScene"
+import WIFIScene from "./scenes/WIFIScene"
 import GoputScene from "./scenes/GoputScene"
 import Scene2 from "./scenes/Scene2"
 import CekPintu from "./scenes/CekPintu"
@@ -35,7 +35,7 @@ export function startGame(containerId) {
     roundPixels: true,
     scene: [
       PermissionScene, HeadphoneScene, BootScene, MenuScene, GuideScene, ClockScene,
-      GameScene, ComputerScene, LMSScene, WiFiScene, GoputScene,
+      GameScene, ComputerScene, LMSScene, WIFIScene, GoputScene,
       Scene2, CekPintu, LemariScene, CCTVScene,
       JumpscareScene, FinalScene, GameOverScene
     ]

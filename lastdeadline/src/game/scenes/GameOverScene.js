@@ -61,7 +61,7 @@ export default class GameOverScene extends Phaser.Scene {
 
   stopAllScenes() {
     const overlayScenes = [
-      "LMSScene", "GoputScene", "WiFiScene",
+      "LMSScene", "GoputScene", "WIFIScene",
       "ComputerScene", "GameScene", "Scene2",
       "CekPintu", "ClockScene",
     ]

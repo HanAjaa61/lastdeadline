@@ -315,7 +315,7 @@ export default class ComputerScene extends Phaser.Scene {
   goToScene(key, data = {}) {
     if (this.isTransitioning) return
     this.isTransitioning = true
-    const OVERLAY_SCENES = ["LMSScene", "WiFiScene", "GoputScene"]
+    const OVERLAY_SCENES = ["LMSScene", "WIFIScene", "GoputScene"]
     if (OVERLAY_SCENES.includes(key)) {
       this.cameras.main.setVisible(false)
       this.scene.launch(key, data)

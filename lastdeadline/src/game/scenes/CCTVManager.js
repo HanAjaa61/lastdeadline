@@ -105,7 +105,7 @@ const CCTVManager = {
     this._notify("jumpscare")
 
     const targets = ["ComputerScene", "GameScene", "Scene2", "CekPintu",
-                    "LMSScene", "WiFiScene", "GoputScene"]
+                    "LMSScene", "WIFIScene", "GoputScene"]
 
     for (const key of targets) {
       if (this._scene.scene.isActive(key)) {
