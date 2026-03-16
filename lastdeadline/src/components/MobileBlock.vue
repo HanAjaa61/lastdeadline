@@ -1,43 +1,43 @@
 <template>
   <div v-if="isBlocked" class="mobile-block">
-    <!-- scanlines -->
     <div class="scanlines" />
-    <!-- vignette -->
     <div class="vignette" />
 
     <div class="panel-wrap">
-      <!-- pixel panel corners -->
       <div class="corner tl" />
       <div class="corner tr" />
       <div class="corner bl" />
       <div class="corner br" />
 
       <div class="panel-inner">
+
         <div class="header-bar">
           <span class="blink">▮</span>
           <span>PERINGATAN SISTEM</span>
           <span class="blink" style="animation-delay:.4s">▮</span>
         </div>
 
-        <!-- icon monitor pixel art (SVG inline) -->
+        <!-- Phone + X icon -->
         <div class="icon-wrap">
-          <svg width="64" height="64" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" class="pixel-icon">
-            <rect x="1" y="1" width="14" height="10" fill="#001a00" stroke="#00ff41" stroke-width="1"/>
-            <rect x="2" y="2" width="12" height="8"  fill="#002200"/>
-            <rect x="5" y="4" width="6"  height="4"  fill="#00ff41" opacity="0.15"/>
-            <rect x="6" y="3" width="4"  height="1"  fill="#00ff41" opacity="0.4"/>
-            <rect x="7" y="11" width="2" height="2"  fill="#00aa2a"/>
-            <rect x="5" y="13" width="6" height="1"  fill="#00aa2a"/>
-            <!-- X mark -->
-            <rect x="5" y="5" width="1" height="1" fill="#ff3333"/>
-            <rect x="6" y="6" width="1" height="1" fill="#ff3333"/>
-            <rect x="7" y="7" width="2" height="1" fill="#ff3333"/>
-            <rect x="6" y="8" width="1" height="1" fill="#ff3333"/>
-            <rect x="5" y="9" width="1" height="1" fill="#ff3333"/>
-            <rect x="9" y="5" width="1" height="1" fill="#ff3333"/>
-            <rect x="8" y="6" width="1" height="1" fill="#ff3333"/>
-            <rect x="8" y="8" width="1" height="1" fill="#ff3333"/>
-            <rect x="9" y="9" width="1" height="1" fill="#ff3333"/>
+          <svg width="72" height="72" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" class="pixel-icon">
+            <!-- phone body -->
+            <rect x="5" y="1" width="10" height="18" fill="#001a00" stroke="#00ff41" stroke-width="1"/>
+            <!-- screen -->
+            <rect x="6" y="3" width="8" height="11" fill="#002200"/>
+            <!-- home button -->
+            <rect x="9" y="15" width="2" height="2" fill="#00aa2a"/>
+            <!-- screen glow -->
+            <rect x="7" y="4" width="6" height="9" fill="#00ff41" opacity="0.05"/>
+            <!-- X merah diagonal kiri-kanan -->
+            <rect x="6"  y="4"  width="2" height="2" fill="#ff3333"/>
+            <rect x="8"  y="6"  width="2" height="2" fill="#ff3333"/>
+            <rect x="10" y="8"  width="2" height="2" fill="#ff3333"/>
+            <rect x="12" y="10" width="2" height="2" fill="#ff3333"/>
+            <!-- X merah diagonal kanan-kiri -->
+            <rect x="12" y="4"  width="2" height="2" fill="#ff3333"/>
+            <rect x="10" y="6"  width="2" height="2" fill="#ff3333"/>
+            <rect x="8"  y="8"  width="2" height="2" fill="#ff3333"/>
+            <rect x="6"  y="10" width="2" height="2" fill="#ff3333"/>
           </svg>
         </div>
 
@@ -56,11 +56,8 @@
           [ Lebar layar minimum: 1024px ]
         </div>
 
-        <button class="exit-btn" @click="handleExit">
-          <span class="btn-bracket">[</span>
-          &nbsp;KELUAR&nbsp;
-          <span class="btn-bracket">]</span>
-        </button>
+        <button class="exit-btn" @click="handleExit">KELUAR</button>
+
       </div>
     </div>
   </div>
@@ -92,7 +89,6 @@ export default {
 
     handleExit() {
       window.close()
-      // fallback kalau window.close() diblokir browser
       document.body.innerHTML = `
         <div style="
           display:flex; align-items:center; justify-content:center;
@@ -124,7 +120,6 @@ export default {
   font-family: 'VT323', 'Courier New', monospace;
 }
 
-/* scanlines */
 .scanlines {
   position: fixed;
   inset: 0;
@@ -139,7 +134,6 @@ export default {
   z-index: 1;
 }
 
-/* vignette */
 .vignette {
   position: fixed;
   inset: 0;
@@ -148,7 +142,6 @@ export default {
   z-index: 1;
 }
 
-/* panel wrapper with pixel corners */
 .panel-wrap {
   position: relative;
   z-index: 2;
@@ -162,7 +155,6 @@ export default {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* pixel corners */
 .corner {
   position: absolute;
   width: 10px;
@@ -179,7 +171,7 @@ export default {
 .panel-inner {
   border: 1px solid #004400;
   background: rgba(0, 12, 0, 0.97);
-  padding: 28px 28px 24px;
+  padding: 20px 28px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -190,10 +182,10 @@ export default {
     inset 0 0 60px rgba(0,0,0,0.5);
 }
 
-/* header bar */
 .header-bar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   font-size: 11px;
   color: #004400;
@@ -211,19 +203,17 @@ export default {
   50%       { opacity: 0; }
 }
 
-/* pixel icon */
 .icon-wrap {
   margin: 4px 0 0;
   image-rendering: pixelated;
-  filter: drop-shadow(0 0 8px rgba(0,255,65,0.4));
+  filter: drop-shadow(0 0 10px rgba(255,50,50,0.35)) drop-shadow(0 0 6px rgba(0,255,65,0.2));
 }
 .pixel-icon {
   image-rendering: pixelated;
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
 }
 
-/* title */
 .title-text {
   font-size: 22px;
   color: #ff4444;
@@ -232,7 +222,6 @@ export default {
   text-shadow: 0 0 10px rgba(255,60,60,0.5);
 }
 
-/* divider */
 .divider {
   width: 100%;
   height: 1px;
@@ -240,7 +229,6 @@ export default {
   opacity: 0.6;
 }
 
-/* body text */
 .body-text {
   font-size: 18px;
   color: #77bb77;
@@ -252,7 +240,6 @@ export default {
   text-shadow: 0 0 6px rgba(0,255,65,0.4);
 }
 
-/* sub text */
 .sub-text {
   font-size: 13px;
   color: #224422;
@@ -260,7 +247,6 @@ export default {
   text-align: center;
 }
 
-/* exit button */
 .exit-btn {
   margin-top: 6px;
   background: #001a00;
@@ -268,11 +254,10 @@ export default {
   color: #00ff41;
   font-family: 'VT323', monospace;
   font-size: 18px;
-  letter-spacing: 2px;
-  padding: 8px 32px;
+  letter-spacing: 3px;
+  padding: 8px 40px;
   cursor: pointer;
-  position: relative;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
   box-shadow: 0 0 10px rgba(0,255,65,0.1);
 }
 .exit-btn:hover {
@@ -282,12 +267,5 @@ export default {
 }
 .exit-btn:active {
   transform: translateY(1px);
-}
-.btn-bracket {
-  color: #004400;
-  transition: color 0.15s;
-}
-.exit-btn:hover .btn-bracket {
-  color: #00ff41;
 }
 </style>
