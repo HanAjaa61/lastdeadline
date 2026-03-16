@@ -26,7 +26,7 @@ export default class ComputerScene extends Phaser.Scene {
 
     const apps = [
       { key: "icon1", label: "LMS",   scene: "LMSScene"   },
-      { key: "icon2", label: "WiFi",  scene: "WiFiScene"  },
+      { key: "icon2", label: "WiFi",  scene: "WIFIScene"  },
       { key: "icon3", label: "Goput", scene: "GoputScene" },
       { key: "cctv",  label: "CCTV",  scene: "CCTVScene"  },
     ]
@@ -111,7 +111,7 @@ export default class ComputerScene extends Phaser.Scene {
 
     this.input.keyboard.on("keydown-Q", () => {
       if (this.scene.isActive("LMSScene"))   return
-      if (this.scene.isActive("WiFiScene"))  return
+      if (this.scene.isActive("WIFIScene"))  return
       if (this.scene.isActive("GoputScene")) return
       this.sound.play("chairdragSfx", { volume: 0.7 })
       this.goToScene("GameScene")

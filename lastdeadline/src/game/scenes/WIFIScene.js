@@ -1,9 +1,9 @@
 import Phaser from "phaser"
 import GameState from "./GameState"
 
-export default class WiFiScene extends Phaser.Scene {
+export default class WIFIScene extends Phaser.Scene {
   constructor() {
-    super("WiFiScene")
+    super("WIFIScene")
   }
 
   create() {
@@ -287,7 +287,7 @@ export default class WiFiScene extends Phaser.Scene {
     this.clearMaze()
 
     if (key === "ComputerScene") {
-      this.scene.stop()
+      this.scene.stop("WIFIScene")
       const cs = this.scene.get("ComputerScene")
       if (cs) cs.resumeFromOverlay()
       return
