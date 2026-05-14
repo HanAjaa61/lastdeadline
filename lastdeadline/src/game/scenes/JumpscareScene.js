@@ -25,7 +25,7 @@ export default class JumpscareScene extends Phaser.Scene {
     video.setOrigin(0.5)
     video.setDepth(5)
 
-    const TARGET_SCALE = 0.45
+    const TARGET_SCALE = 0.50
 
     const fitVideo = () => {
       const vw = video.width  || width
