@@ -79,9 +79,13 @@ export default class BootScene extends Phaser.Scene {
     const { width, height } = this.scale
     this.cameras.main.setBackgroundColor("#000000")
 
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('16px "minecraft"').catch(() => {})
+    }
+
     const logoTexture = this.textures.get("logo").getSourceImage()
     const logoNativeW = logoTexture.width
-    const targetW     = width * 0.25                  // 25% lebar layar — sesuaikan di sini
+    const targetW     = width * 0.25
     const scale       = targetW / logoNativeW
 
     const logo = this.add.image(width / 2, height / 2, "logo")
