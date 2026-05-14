@@ -1,6 +1,5 @@
 import Phaser from "phaser"
 
-// Ukuran target tombol dan judul dalam pixel (di canvas 1280x720)
 const TITLE_W  = 580
 const TITLE_H  = 260
 const BTN_W    = 260
@@ -11,6 +10,10 @@ export default class MenuScene extends Phaser.Scene {
     super("MenuScene")
   }
 
+  init() {
+    this._transitioning = false
+  }
+
   create() {
     const { width, height } = this.scale
 
@@ -19,9 +22,11 @@ export default class MenuScene extends Phaser.Scene {
     this.hoverSound = this.sound.add("hoverSfx", { volume: 0.6 })
     this.clickSound = this.sound.add("clickSfx", { volume: 0.7 })
 
-    // ── Background video ──────────────────────────────────────────
     this.bg = this.add.video(width / 2, height / 2, "menuVideo")
     this.bg.setOrigin(0.5)
+    if (this.bg.video) {
+      this.bg.video.style.pointerEvents = "none"
+    }
     this.bg.play(true, true)
 
     if (this.bg.video && this.bg.video.readyState >= 1) {
@@ -33,26 +38,22 @@ export default class MenuScene extends Phaser.Scene {
 
     this.startMusic()
 
-    // ── Judul ─────────────────────────────────────────────────────
     this.add.image(width / 2, height * 0.28, "menuTitle")
       .setOrigin(0.5)
       .setDisplaySize(TITLE_W, TITLE_H)
 
-    // ── Tombol START ──────────────────────────────────────────────
     const startBtn = this.add.image(width / 2, height * 0.57, "btnPlay")
       .setOrigin(0.5)
       .setDisplaySize(BTN_W, BTN_H)
       .setInteractive({ useHandCursor: true })
 
-    // ── Tombol EXIT ───────────────────────────────────────────────
     const exitBtn = this.add.image(width / 2, height * 0.72, "btnExit")
       .setOrigin(0.5)
       .setDisplaySize(BTN_W, BTN_H)
       .setInteractive({ useHandCursor: true })
 
-    // ── Hover / press effect ──────────────────────────────────────
-    const BASE_W = BTN_W
-    const BASE_H = BTN_H
+    const BASE_W  = BTN_W
+    const BASE_H  = BTN_H
     const HOVER_W = BTN_W * 1.08
     const HOVER_H = BTN_H * 1.08
     const PRESS_W = BTN_W * 0.94
@@ -74,13 +75,11 @@ export default class MenuScene extends Phaser.Scene {
       })
     })
 
-    // ── Aksi START ────────────────────────────────────────────────
     startBtn.on("pointerdown", () => {
       this.clickSound.play()
       this._stopAndFade(() => this.scene.start("ClockScene"))
     })
 
-    // ── Aksi EXIT ─────────────────────────────────────────────────
     exitBtn.on("pointerdown", () => {
       this.clickSound.play()
       this._stopAndFade(() => window.close())
@@ -89,7 +88,6 @@ export default class MenuScene extends Phaser.Scene {
     this.scale.on("resize", this.handleResize, this)
   }
 
-  // Fade out dulu, baru jalankan callback — dipakai startBtn & exitBtn
   _stopAndFade(callback) {
     if (this._transitioning) return
     this._transitioning = true
@@ -118,16 +116,22 @@ export default class MenuScene extends Phaser.Scene {
       this.menuMusic.play()
     }
 
-    if (this.sound.context.state === "running") {
+    const ctx = this.sound.context
+    if (!ctx) { tryPlay(); return }
+
+    const doPlay = () => {
+      ctx.resume().then(tryPlay).catch(tryPlay)
+    }
+
+    if (ctx.state === "running") {
       tryPlay()
     } else {
-      this.sound.context.resume()
-        .then(() => tryPlay())
-        .catch(() => {
-          this.input.once("pointerdown", () => {
-            this.sound.context.resume().then(() => tryPlay())
-          })
-        })
+      doPlay()
+      this.input.once("pointerdown", () => {
+        if (!this.menuMusic || !this.menuMusic.isPlaying) {
+          ctx.resume().then(tryPlay)
+        }
+      })
     }
   }
 
