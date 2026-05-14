@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import GameState from "./GameState"
+import CCTVManager from "./CCTVManager"
 
 const MENU = [
   { key: "mieAyam",    label: "Mie Ayam",    harga: 80,  lapar: 40, insanity: -30, desc: "Lapar +40  Insanity -30" },
@@ -16,6 +17,7 @@ export default class GoputScene extends Phaser.Scene {
     const { width, height } = this.scale
 
     this.isTransitioning = false
+    CCTVManager.attach(this)
     this.gameBgm = this.playBgm()
 
     this.add.rectangle(0, 0, width, height, 0x0a1a0a).setOrigin(0)

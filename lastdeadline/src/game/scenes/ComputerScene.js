@@ -1,4 +1,5 @@
 import DoorCheckManager from "./DoorCheckManager"
+import CCTVManager from "./CCTVManager"
 import Phaser from "phaser"
 import GameState from "./GameState"
 
@@ -11,6 +12,7 @@ export default class ComputerScene extends Phaser.Scene {
     const { width, height } = this.scale
 
     this.isTransitioning = false
+    CCTVManager.attach(this)
     this.cameras.main.setZoom(1)
 
     this.add.image(width / 2, height / 2, "computerBg")
@@ -73,25 +75,6 @@ export default class ComputerScene extends Phaser.Scene {
         this.goToScene(app.scene)
       })
     })
-
-    this.add.rectangle(width / 2, height - 24, width, 48, 0x111122, 0.96).setOrigin(0.5)
-    this.add.rectangle(width / 2, height - 48, width, 2, 0x3333aa, 0.6).setOrigin(0.5)
-
-    this.clockText = this.add.text(width / 2, height - 24, "", {
-      fontSize: "18px",
-      fontFamily: "minecraft",
-      color: "#ffffff",
-      stroke: "#000000",
-      strokeThickness: 2,
-    }).setOrigin(0.5)
-
-    this.wifiIndicator = this.add.text(160, height - 24, "● WiFi: ON", {
-      fontSize: "15px",
-      fontFamily: "minecraft",
-      color: "#00ff41",
-      stroke: "#000000",
-      strokeThickness: 2,
-    }).setOrigin(0, 0.5)
 
     this.promptBack = this.add.text(width / 2, height - 76, "Pencet Q untuk kembali", {
       fontSize: "16px",

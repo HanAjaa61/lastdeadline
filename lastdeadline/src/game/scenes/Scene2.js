@@ -1,4 +1,5 @@
 import DoorCheckManager from "./DoorCheckManager"
+import CCTVManager from "./CCTVManager"
 import Phaser from "phaser"
 import GameState from "./GameState"
 
@@ -25,6 +26,7 @@ export default class Scene2 extends Phaser.Scene {
     const { width, height } = this.scale
 
     this.isTransitioning = false
+    CCTVManager.attach(this)
     this.anomalyActive   = false
     this.anomalyTimer    = null
     this.anomalyType     = null

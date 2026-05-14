@@ -3,7 +3,6 @@ import PermissionScene from "./scenes/PermissionScene"
 import HeadphoneScene from "./scenes/HeadphoneScene"
 import BootScene from "./scenes/BootScene"
 import MenuScene from "./scenes/MenuScene"
-import GuideScene from "./scenes/GuideScene"
 import ClockScene from "./scenes/ClockScene"
 import GameScene from "./scenes/GameScene"
 import ComputerScene from "./scenes/ComputerScene"
@@ -23,18 +22,19 @@ export function startGame(containerId) {
     type: Phaser.AUTO,
     parent: containerId,
 
-    scale: {
-      mode: Phaser.Scale.ENVELOP,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: 1280,
-      height: 720
-    },
+    // game.js
+  scale: {
+    mode: Phaser.Scale.EXPAND,       
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 1280,
+    height: 720
+  },
 
     backgroundColor: "#000000",
     pixelArt: true,
     roundPixels: true,
     scene: [
-      PermissionScene, HeadphoneScene, BootScene, MenuScene, GuideScene, ClockScene,
+      PermissionScene, HeadphoneScene, BootScene, MenuScene, ClockScene,
       GameScene, ComputerScene, LMSScene, WIFIScene, GoputScene,
       Scene2, CekPintu, LemariScene, CCTVScene,
       JumpscareScene, FinalScene, GameOverScene

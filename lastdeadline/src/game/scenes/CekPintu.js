@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 import GameState from "./GameState"
 import DoorCheckManager from "./DoorCheckManager"
+import CCTVManager from "./CCTVManager"
 
 export default class CekPintu extends Phaser.Scene {
   constructor() {
@@ -16,6 +17,7 @@ export default class CekPintu extends Phaser.Scene {
     const { width, height } = this.scale
 
     this.isTransitioning  = false
+    CCTVManager.attach(this)
     this.flashlightOn     = false
     this.anomaliVisible   = false
     this.anomaliHeldMs    = 0

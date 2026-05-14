@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import GameState from "./GameState"
+import CCTVManager from "./CCTVManager"
 
 export default class LMSScene extends Phaser.Scene {
   constructor() {
@@ -10,6 +11,7 @@ export default class LMSScene extends Phaser.Scene {
     const { width, height } = this.scale
 
     this.isTransitioning = false
+    CCTVManager.attach(this)
     this.jawabanListener = null
     this.currentSoal     = null
     this.isLoadingSoal   = false

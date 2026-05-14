@@ -87,7 +87,7 @@ const DoorCheckManager = {
 
     const sceneKeys = [
       "GameScene", "Scene2", "ComputerScene",
-      "LMSScene", "WIFIScene", "GoputScene", "CekPintu",
+      "LMSScene", "WIFIScene", "GoputScene", "CekPintu", "CCTVScene",
     ]
 
     let activeScene = null

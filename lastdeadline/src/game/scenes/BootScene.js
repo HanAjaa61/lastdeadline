@@ -6,7 +6,10 @@ export default class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("logo", "/assets/devlogo.png")
+    this.load.image("menuTitle", "/assets/title.png")
+    this.load.image("btnPlay",   "/assets/playbutton.png")
+    this.load.image("btnExit",   "/assets/exitbutton.png")
+    this.load.image("logo", "/assets/logodev.png")
     this.load.audio("menuBgm",      "/assets/bgm.mp3")
     this.load.audio("hoverSfx",     "/assets/hover.mp3")
     this.load.audio("clickSfx",     "/assets/click.mp3")
@@ -29,7 +32,6 @@ export default class BootScene extends Phaser.Scene {
     this.load.audio("doorCloseSfx",    "/assets/doorclose.mp3")
     this.load.audio("anomaliSfx",      "/assets/anomali.mp3")
     this.load.audio("ambience",        "/assets/ambience.mp3")
-    // SFX Lemari
     this.load.audio("heartbeatSfx",  "/assets/heartbeat.mp3")
     this.load.audio("breathSfx",     "/assets/breath.mp3")
     this.load.audio("monsterSfx1",   "/assets/monster1.mp3")
@@ -70,22 +72,34 @@ export default class BootScene extends Phaser.Scene {
     this.load.image("anomalikanan", "/assets/anomalikanan.png")
     this.load.image("anomalikiri", "/assets/anomalikiri.png")
     this.load.image("lemari",       "/assets/lemari.png")
+    this.load.audio("jumpscare2Sfx", "/assets/jumpscare2.mp3")
   }
 
   create() {
     const { width, height } = this.scale
     this.cameras.main.setBackgroundColor("#000000")
+
+    const logoTexture = this.textures.get("logo").getSourceImage()
+    const logoNativeW = logoTexture.width
+    const targetW     = width * 0.25                  // 25% lebar layar — sesuaikan di sini
+    const scale       = targetW / logoNativeW
+
     const logo = this.add.image(width / 2, height / 2, "logo")
-    logo.setAlpha(0)
+      .setScale(scale)
+      .setAlpha(0)
+
     this.tweens.add({ targets: logo, alpha: 1, duration: 1500 })
+
     this.input.once("pointerdown", () => {
       if (this.sound.context && this.sound.context.state === "suspended") {
         this.sound.context.resume()
       }
     })
+
     this.time.delayedCall(2500, () => {
       this.cameras.main.fadeOut(1500, 0, 0, 0)
     })
+
     this.cameras.main.once("camerafadeoutcomplete", () => {
       this.scene.start("MenuScene")
     })
