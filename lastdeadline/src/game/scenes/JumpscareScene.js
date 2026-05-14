@@ -14,6 +14,7 @@ export default class JumpscareScene extends Phaser.Scene {
     const { width, height } = this.scale
 
     this.cameras.main.setBackgroundColor("#000000")
+    this.cameras.main.setZoom(1.0)
 
     this.sound.stopAll()
     this.sound.play("glitchSfx",      { volume: 1.5 })
@@ -23,43 +24,48 @@ export default class JumpscareScene extends Phaser.Scene {
     const video = this.add.video(width / 2, height / 2, "jumpscareVideo")
     video.setOrigin(0.5)
     video.setDepth(5)
-    video.play()
+
+    const TARGET_SCALE = 0.55
 
     const fitVideo = () => {
       const vw = video.width  || width
       const vh = video.height || height
-      const scale = Math.max(width / vw, height / vh) * 0.9
-      video.setScale(scale)
+      const base = Math.max(width / vw, height / vh)
+      video.setScale(base * TARGET_SCALE)
     }
-    fitVideo()
+
     video.on("created", fitVideo)
 
-    const savedScale = { x: video.scaleX, y: video.scaleY }
     video.setScale(0.05)
-    this.tweens.add({
-      targets: video,
-      scaleX: savedScale.x,
-      scaleY: savedScale.y,
-      duration: 100,
-      ease: "Expo.easeOut",
-      onComplete: fitVideo,
-    })
+    video.play()
 
-    this.time.delayedCall(150, () => {
+    this.time.delayedCall(80, () => {
       if (!this.scene.isActive("JumpscareScene")) return
       fitVideo()
+      const targetScale = video.scaleX
+
       this.tweens.add({
         targets: video,
-        scaleX: video.scaleX * 1.04,
-        scaleY: video.scaleY * 1.04,
-        duration: 70,
+        scaleX: targetScale,
+        scaleY: targetScale,
+        duration: 120,
+        ease: "Expo.easeOut",
+      })
+    })
+
+    this.time.delayedCall(300, () => {
+      if (!this.scene.isActive("JumpscareScene")) return
+      const s = video.scaleX
+      this.tweens.add({
+        targets: video,
+        scaleX: s * 1.02,
+        scaleY: s * 1.02,
+        duration: 90,
         ease: "Sine.easeInOut",
         yoyo: true,
         repeat: -1,
       })
     })
-
-    this.cameras.main.setZoom(0.75)
 
     this.cameras.main.shake(120,  0.018)
     this.time.delayedCall(120,  () => { if (!this.scene.isActive("JumpscareScene")) return; this.cameras.main.shake(200, 0.012) })
@@ -68,7 +74,7 @@ export default class JumpscareScene extends Phaser.Scene {
     this.time.delayedCall(1020, () => { if (!this.scene.isActive("JumpscareScene")) return; this.cameras.main.shake(600, 0.003) })
     this.time.delayedCall(1620, () => { if (!this.scene.isActive("JumpscareScene")) return; this.cameras.main.shake(800, 0.0015) })
 
-    const flashWhite = this.add.rectangle(width/2, height/2, width*3, height*3, 0xffffff, 1).setDepth(20)
+    const flashWhite = this.add.rectangle(width / 2, height / 2, width * 3, height * 3, 0xffffff, 1).setDepth(20)
     this.tweens.add({
       targets: flashWhite,
       alpha: 0,
@@ -76,7 +82,7 @@ export default class JumpscareScene extends Phaser.Scene {
       ease: "Expo.easeOut",
     })
 
-    const flashRed = this.add.rectangle(width/2, height/2, width*3, height*3, 0xff0000, 0.9).setDepth(19)
+    const flashRed = this.add.rectangle(width / 2, height / 2, width * 3, height * 3, 0xff0000, 0.9).setDepth(19)
     this.tweens.add({
       targets: flashRed,
       alpha: 0,
@@ -85,15 +91,15 @@ export default class JumpscareScene extends Phaser.Scene {
       delay: 80,
     })
 
-    const rgbRed  = this.add.rectangle(width/2 - 10, height/2, width*3, height*3, 0xff0000, 0.22).setDepth(6).setBlendMode(Phaser.BlendModes.ADD)
-    const rgbBlue = this.add.rectangle(width/2 + 10, height/2, width*3, height*3, 0x0000ff, 0.22).setDepth(6).setBlendMode(Phaser.BlendModes.ADD)
+    const rgbRed  = this.add.rectangle(width / 2 - 10, height / 2, width * 3, height * 3, 0xff0000, 0.22).setDepth(6).setBlendMode(Phaser.BlendModes.ADD)
+    const rgbBlue = this.add.rectangle(width / 2 + 10, height / 2, width * 3, height * 3, 0x0000ff, 0.22).setDepth(6).setBlendMode(Phaser.BlendModes.ADD)
 
     this.time.addEvent({
       delay: 30, repeat: 60,
       callback: () => {
         if (!this.scene.isActive("JumpscareScene")) return
-        rgbRed.setX(width/2  + Phaser.Math.Between(-15, -5))
-        rgbBlue.setX(width/2 + Phaser.Math.Between(5,   15))
+        rgbRed.setX(width / 2  + Phaser.Math.Between(-15, -5))
+        rgbBlue.setX(width / 2 + Phaser.Math.Between(5,   15))
       }
     })
 
@@ -112,7 +118,7 @@ export default class JumpscareScene extends Phaser.Scene {
     }
 
     const noiseGfx = this.add.graphics().setDepth(7)
-    let noiseTimer = this.time.addEvent({
+    const noiseTimer = this.time.addEvent({
       delay: 25, loop: true,
       callback: () => {
         if (!this.scene.isActive("JumpscareScene")) return
@@ -140,7 +146,7 @@ export default class JumpscareScene extends Phaser.Scene {
     })
 
     let flickerCount = 0
-    let flickerTimer = this.time.addEvent({
+    const flickerTimer = this.time.addEvent({
       delay: 40, loop: true,
       callback: () => {
         if (!this.scene.isActive("JumpscareScene")) return
@@ -154,8 +160,8 @@ export default class JumpscareScene extends Phaser.Scene {
       delay: 30, repeat: 60,
       callback: () => {
         if (!this.scene.isActive("JumpscareScene")) return
-        video.setX(width/2  + Phaser.Math.Between(-50, 50))
-        video.setY(height/2 + Phaser.Math.Between(-30, 30))
+        video.setX(width / 2  + Phaser.Math.Between(-40, 40))
+        video.setY(height / 2 + Phaser.Math.Between(-25, 25))
       }
     })
 
@@ -163,7 +169,7 @@ export default class JumpscareScene extends Phaser.Scene {
       if (!this.scene.isActive("JumpscareScene")) return
       this.tweens.add({
         targets: video,
-        x: width/2, y: height/2,
+        x: width / 2, y: height / 2,
         duration: 300,
         ease: "Sine.easeOut",
       })
@@ -175,7 +181,6 @@ export default class JumpscareScene extends Phaser.Scene {
       noiseTimer.remove()
       flickerTimer.remove()
       this.sound.stopAll()
-      if (this.jumpscare2 && this.jumpscare2.isPlaying) this.jumpscare2.stop()
       this.cameras.main.flash(80, 0, 0, 0)
       this.time.delayedCall(80, () => {
         this.cameras.main.fadeOut(400, 0, 0, 0)
