@@ -28,7 +28,7 @@ export default class JumpscareScene extends Phaser.Scene {
     const fitVideo = () => {
       const vw = video.width  || width
       const vh = video.height || height
-      const scale = Math.max(width / vw, height / vh) * 1.08
+      const scale = Math.max(width / vw, height / vh) * 0.9
       video.setScale(scale)
     }
     fitVideo()
