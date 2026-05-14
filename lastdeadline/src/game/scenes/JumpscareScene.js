@@ -59,7 +59,7 @@ export default class JumpscareScene extends Phaser.Scene {
       })
     })
 
-    this.cameras.main.setZoom(1.08)
+    this.cameras.main.setZoom(0.75)
 
     this.cameras.main.shake(120,  0.018)
     this.time.delayedCall(120,  () => { if (!this.scene.isActive("JumpscareScene")) return; this.cameras.main.shake(200, 0.012) })
