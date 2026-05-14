@@ -3,7 +3,8 @@ import { onMounted } from "vue"
 import { startGame } from "./game/game"
 import MobileBlock from "./components/MobileBlock.vue"
 
-onMounted(() => {
+onMounted(async () => {
+  await document.fonts.load('20px "minecraft"')
   startGame("game-container")
 })
 </script>
