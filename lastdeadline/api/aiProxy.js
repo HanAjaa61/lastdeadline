@@ -59,21 +59,22 @@ export default async function handler(req, res) {
       const { night } = body
       const seed = Math.floor(Math.random() * 99999)
 
+      // Topik umum berdasarkan malam — makin susah tapi tetap universal
       const topikMap = {
-        1: "pilih SALAH SATU secara acak: (1) pengetahuan umum seperti ibu kota negara, nama benua, atau fakta alam sederhana, ATAU (2) matematika dasar seperti penjumlahan, pengurangan, perkalian, atau pembagian bilangan 1-50",
-        2: "pilih SALAH SATU secara acak: (1) sains dasar seperti fungsi organ tubuh, siklus air, atau nama planet, ATAU (2) matematika sedang seperti pecahan sederhana, persen, atau kelipatan bilangan",
-        3: "pilih SALAH SATU secara acak: (1) wawasan umum seperti sejarah singkat, geografi, atau budaya Indonesia, ATAU (2) matematika menengah seperti luas bangun datar sederhana, rata-rata, atau konversi satuan",
+        1: "pengetahuan umum sehari-hari seperti sains dasar, geografi, atau fakta umum yang semua orang tahu",
+        2: "ilmu pengetahuan umum seperti biologi dasar, sejarah singkat, atau matematika sederhana",
+        3: "wawasan umum seperti ekonomi dasar, budaya, teknologi sehari-hari, atau logika sederhana",
       }
       const topik = topikMap[night] || topikMap[1]
 
       const result = await groqRequest([
         {
           role: "system",
-          content: "Kamu pembuat soal kuis harian. Buat soal yang bisa dijawab semua orang tanpa keahlian khusus. Soal matematika harus punya jawaban angka yang pasti. Balas HANYA JSON.",
+          content: "Kamu pembuat soal kuis. Buat soal pertanyaan singkat yang mudah dipahami semua orang. Balas HANYA JSON.",
         },
         {
           role: "user",
-          content: `Seed:${seed}. Buat 1 soal tentang ${topik}. Aturan: soal harus singkat (1 kalimat), bisa dijawab dengan 1-2 kalimat atau 1 angka, JANGAN soal yang butuh keahlian profesional. Contoh soal bagus: "Berapa hasil 24 dikali 7?", "Apa ibu kota negara Jepang?", "Sebutkan 3 planet dalam tata surya!", "Berapa 15% dari 200?", "Organ apa yang memompa darah dalam tubuh manusia?". Balas JSON: {"soal":"tulis soal disini","topik":"nama topik singkat"}`,
+          content: `Seed:${seed}. Buat 1 soal pertanyaan singkat tentang ${topik}. Soal harus bisa dijawab dengan 1-2 kalimat pendek oleh siapapun tanpa keahlian khusus. Contoh soal yang bagus: "Apa fungsi utama jantung dalam tubuh manusia?", "Sebutkan 3 negara di Asia Tenggara!", "Apa yang dimaksud dengan inflasi?", "Berapa hasil dari 15 dikali 8?". JANGAN buat soal yang terlalu teknis atau butuh keahlian profesional. Balas JSON: {"soal":"tulis soal disini","topik":"nama topik singkat"}`,
         },
       ], 300)
 
@@ -93,11 +94,11 @@ export default async function handler(req, res) {
       const result = await groqRequest([
         {
           role: "system",
-          content: "Kamu penilai jawaban kuis. Nilai secara objektif tapi murah hati — jawaban yang mendekati benar tetap diberi nilai tinggi. Untuk soal matematika, nilai 100 jika jawaban benar, 0 jika salah. Balas HANYA JSON.",
+          content: "Kamu penilai jawaban kuis yang adil. Aturan: (1) Soal PERHITUNGAN/MATEMATIKA — cek kebenarannya secara matematis, jika benar beri 100, jika salah beri 0, tidak ada nilai tengah. (2) Soal PENGETAHUAN UMUM — beri 85-100 jika inti jawaban benar walau singkat, beri 50-70 jika mendekati benar tapi kurang tepat, beri 0-40 jika salah. Jawaban singkat tapi benar = nilai penuh. Field feedback WAJIB berisi jawaban yang benar secara singkat, bukan komentar tentang jawaban user. Balas HANYA JSON.",
         },
         {
           role: "user",
-          content: `Soal: "${soal}"\nJawaban: "${jawaban}"\n\nNilai dari 0-100. Untuk soal pengetahuan umum, beri 70+ kalau mendekati benar. Untuk soal matematika, beri 100 kalau benar persis, 0 kalau salah. Balas JSON: {"nilai":75,"feedback":"penjelasan singkat 1 kalimat dalam bahasa Indonesia"}`,
+          content: `Soal: "${soal}"\nJawaban user: "${jawaban}"\n\nNilai jawaban ini. Untuk soal matematika hanya boleh nilai 0 atau 100. Untuk soal lain jawaban singkat tapi benar tetap dapat nilai penuh. Isi feedback dengan jawaban yang benar secara singkat dalam bahasa Indonesia, contoh format feedback: "Jawaban: Tokyo", "2 (hasil 4-2=2)", "Jantung berfungsi memompa darah". Balas JSON: {"nilai":100,"feedback":"jawaban benar singkat"}`,
         },
       ], 200)
 
