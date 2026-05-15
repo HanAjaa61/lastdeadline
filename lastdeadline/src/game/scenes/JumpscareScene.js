@@ -177,6 +177,8 @@ export default class JumpscareScene extends Phaser.Scene {
       this.tweens.killAll()
       glitchTimer.remove()
       flickerTimer.remove()
+      // Stop semua suara jumpscare sebelum pindah
+      this.sound.stopAll()
 
       this.cameras.main.flash(80, 0, 0, 0)
       this.time.delayedCall(80, () => {

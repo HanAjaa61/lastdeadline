@@ -94,11 +94,11 @@ export default async function handler(req, res) {
       const result = await groqRequest([
         {
           role: "system",
-          content: "Kamu penilai jawaban kuis yang adil. Aturan: (1) Soal PERHITUNGAN/MATEMATIKA — cek kebenarannya secara matematis, jika benar beri 100, jika salah beri 0, tidak ada nilai tengah. (2) Soal PENGETAHUAN UMUM — beri 85-100 jika inti jawaban benar walau singkat, beri 50-70 jika mendekati benar tapi kurang tepat, beri 0-40 jika salah. Jawaban singkat tapi benar = nilai penuh. Field feedback WAJIB berisi jawaban yang benar secara singkat, bukan komentar tentang jawaban user. Balas HANYA JSON.",
+          content: "Kamu penilai jawaban kuis yang adil dan cerdas. Aturan penilaian: (1) Soal MATEMATIKA/PERHITUNGAN: hitung sendiri jawaban yang benar, bandingkan dengan jawaban user, beri nilai 100 jika benar, 0 jika salah. TIDAK ADA nilai tengah untuk soal matematika. (2) Soal PENGETAHUAN UMUM: beri 85-100 jika inti jawaban benar walau singkat atau typo kecil, beri 50-70 jika mendekati benar tapi kurang tepat, beri 0-40 jika salah. PENTING: field feedback HARUS berisi jawaban yang benar untuk soal yang SEDANG dinilai, bukan contoh soal lain. Balas HANYA JSON.",
         },
         {
           role: "user",
-          content: `Soal: "${soal}"\nJawaban user: "${jawaban}"\n\nNilai jawaban ini. Untuk soal matematika hanya boleh nilai 0 atau 100. Untuk soal lain jawaban singkat tapi benar tetap dapat nilai penuh. Isi feedback dengan jawaban yang benar secara singkat dalam bahasa Indonesia, contoh format feedback: "Jawaban: Tokyo", "2 (hasil 4-2=2)", "Jantung berfungsi memompa darah". Balas JSON: {"nilai":100,"feedback":"jawaban benar singkat"}`,
+          content: `Soal: "${soal}"\nJawaban user: "${jawaban}"\n\nLangkah: (1) Tentukan jawaban yang benar untuk soal ini. (2) Bandingkan dengan jawaban user. (3) Beri nilai sesuai aturan. (4) Tulis jawaban yang benar di field feedback dalam bahasa Indonesia, maksimal 1 kalimat pendek. JANGAN menulis jawaban dari soal lain. Balas JSON: {"nilai":100,"feedback":"[jawaban benar untuk soal ini]"}`,
         },
       ], 200)
 

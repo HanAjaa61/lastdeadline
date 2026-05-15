@@ -18,6 +18,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor("#000000")
 
+    this.sound.stopAll()
     this.sound.play("gameOverSfx", { volume: 0.8 })
 
     this.add.text(width / 2, height * 0.26, "GAME OVER", {
@@ -37,6 +38,7 @@ export default class GameOverScene extends Phaser.Scene {
     retryBtn.on("pointerover", () => retryBtn.setStyle({ color: "#ffffff" }))
     retryBtn.on("pointerout",  () => retryBtn.setStyle({ color: "#00ff88" }))
     retryBtn.on("pointerdown", () => {
+      this.sound.stopAll()
       this.sound.play("clickSfx", { volume: 0.7 })
       DoorCheckManager.destroy()
       GameState.reset()
@@ -50,10 +52,10 @@ export default class GameOverScene extends Phaser.Scene {
     exitBtn.on("pointerover", () => exitBtn.setStyle({ color: "#ffffff" }))
     exitBtn.on("pointerout",  () => exitBtn.setStyle({ color: "#ff4444" }))
     exitBtn.on("pointerdown", () => {
+      this.sound.stopAll()
       this.sound.play("clickSfx", { volume: 0.7 })
       DoorCheckManager.destroy()
       GameState.reset()
-      this.stopAllMusic()
       this.stopAllScenes()
       this.goToScene("MenuScene")
     })
