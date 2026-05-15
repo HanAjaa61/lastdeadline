@@ -167,7 +167,12 @@ export default class LMSScene extends Phaser.Scene {
   }
 
   setupKeyboard() {
+    // Hapus listener lama dulu supaya tidak double-register
+    this.cleanupInput()
+
     this.jawabanListener = (e) => {
+      // Blok key repeat — ini penyebab huruf ke-spam saat tombol ditahan
+      if (e.repeat) return
       if (!this.scene.isActive("LMSScene")) return
       if (e.key === "q" || e.key === "Q") { e.stopPropagation(); return }
       if (this.isLoadingSoal || this.isNilaiing) return
