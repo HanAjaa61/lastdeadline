@@ -167,28 +167,22 @@ export default class LMSScene extends Phaser.Scene {
   }
 
   setupKeyboard() {
-    // Hapus listener lama dulu supaya tidak double-register
-    this.cleanupInput()
-
-    this.jawabanListener = (e) => {
-      // Blok key repeat — ini penyebab huruf ke-spam saat tombol ditahan
-      if (e.repeat) return
-      if (!this.scene.isActive("LMSScene")) return
-      if (e.key === "q" || e.key === "Q") { e.stopPropagation(); return }
+    // Pakai Phaser keyboard — otomatis di-cleanup saat scene shutdown
+    // tidak perlu window.addEventListener yang rawan double-register
+    this.input.keyboard.on("keydown", (e) => {
       if (this.isLoadingSoal || this.isNilaiing) return
       if (!this.currentSoal) return
-      if (this.nextBg.visible) return
-      if (e.key === "Enter") {
+      if (this.nextBg && this.nextBg.visible) return
+      if (e.keyCode === Phaser.Input.Keyboard.KeyCodes.ENTER) {
         this.submitJawaban()
-      } else if (e.key === "Backspace") {
+      } else if (e.keyCode === Phaser.Input.Keyboard.KeyCodes.BACKSPACE) {
         this.jawabanInput = this.jawabanInput.slice(0, -1)
         this.updateInputDisplay()
-      } else if (e.key.length === 1 && this.jawabanInput.length < 300) {
+      } else if (e.key && e.key.length === 1 && this.jawabanInput.length < 300) {
         this.jawabanInput += e.key
         this.updateInputDisplay()
       }
-    }
-    window.addEventListener("keydown", this.jawabanListener)
+    })
   }
 
   updateInputDisplay() {
@@ -327,10 +321,9 @@ export default class LMSScene extends Phaser.Scene {
   }
 
   cleanupInput() {
-    if (this.jawabanListener) {
-      window.removeEventListener("keydown", this.jawabanListener)
-      this.jawabanListener = null
-    }
+    // Phaser keyboard otomatis cleanup saat scene shutdown
+    // method ini dipertahankan untuk kompatibilitas pemanggilan dari tempat lain
+    try { this.input.keyboard.removeAllListeners("keydown") } catch(e) {}
   }
 
   showNotif(msg, color = "#ffffff") {
