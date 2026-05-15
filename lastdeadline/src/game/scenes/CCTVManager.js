@@ -1,7 +1,7 @@
 import GameState from "./GameState"
 
 // Timeout sebelum jumpscare kalau anomali dibiarkan
-const ANOMALY_TIMEOUT_MS = 5000
+const ANOMALY_TIMEOUT_MS = 12000
 
 // Delay spawn (ms) berdasarkan jam malam
 function getSpawnDelay() {
