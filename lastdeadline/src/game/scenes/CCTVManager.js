@@ -86,35 +86,36 @@ const CCTVManager = {
   },
 
   // Play sfx anomali CCTV secara global di scene manapun yang aktif
-  // Dikecualikan: LemariScene, CekPintu (saat anomali pintu aktif), dan scene anomali pintu
+  // Dikecualikan: LemariScene, CekPintu, JumpscareScene, GameOverScene
+  // Scene2 juga dikecualikan karena punya anomali pintu sendiri
   _playGlobalAnomalySfx() {
     if (!this._scene) return
     if (this._paused) return
 
-    const excluded = ["LemariScene", "JumpscareScene", "GameOverScene"]
-    for (const key of excluded) {
-      try { if (this._scene.scene.isActive(key)) return } catch(e) {}
-    }
-
-    // Cek kalau lagi di CekPintu dan anomali pintu sedang aktif — jangan dobel sfx
+    // Scene yang tidak perlu dengar sfx anomali cctv
+    const excluded = ["LemariScene", "JumpscareScene", "GameOverScene", "CekPintu", "Scene2"]
     try {
-      if (this._scene.scene.isActive("CekPintu")) return
-    } catch(e) {}
+      const manager = this._scene.scene
+      for (const key of excluded) {
+        if (manager.isActive(key)) return
+      }
 
-    const targets = [
-      "CCTVScene", "GameScene", "Scene2", "ComputerScene",
-      "LMSScene", "WIFIScene", "GoputScene"
-    ]
+      // Cari scene aktif yang bisa play sfx — prioritas dari atas ke bawah
+      const targets = [
+        "LMSScene", "WIFIScene", "GoputScene",
+        "CCTVScene", "ComputerScene", "GameScene"
+      ]
 
-    for (const key of targets) {
-      try {
-        if (!this._scene.scene.isActive(key)) continue
-        const sc = this._scene.scene.get(key)
+      for (const key of targets) {
+        if (!manager.isActive(key)) continue
+        const sc = manager.get(key)
         if (!sc || !sc.sound) continue
-        sc.sound.play("anomaliSfx", { volume: 0.6 })
+        // Pastikan sound context aktif
+        if (sc.sound.context && sc.sound.context.state === "suspended") continue
+        sc.sound.play("anomaliSfx", { volume: 0.65 })
         return
-      } catch(e) {}
-    }
+      }
+    } catch(e) {}
   },
 
   _startAnomalyCountdown() {

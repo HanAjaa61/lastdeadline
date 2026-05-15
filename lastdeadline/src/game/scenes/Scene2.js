@@ -190,6 +190,9 @@ export default class Scene2 extends Phaser.Scene {
     this.anomalyType   = Math.random() < 0.5 ? "kiri" : "kanan"
     this.anomalyActive = true
 
+    // Sfx pertanda anomali pintu muncul
+    try { this.sound.play("anomaliSfx", { volume: 0.7 }) } catch(e) {}
+
     this.bgOff.setVisible(false)
     this.bgOn.setVisible(false)
     if (this.anomalyType === "kiri") {
