@@ -191,6 +191,7 @@ export default class LMSScene extends Phaser.Scene {
     this.isLoadingSoal = true
     this.currentSoal   = null
     this.currentToken  = null
+    this.riwayatSoal   = this.riwayatSoal || []
     this.jawabanInput  = ""
 
     this.soalText.setText("Memuat soal dari AI...")
@@ -207,11 +208,13 @@ export default class LMSScene extends Phaser.Scene {
       const res = await fetch("/api/aiProxy?type=generate-soal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ night: GameState.night }),
+        body: JSON.stringify({ night: GameState.night, riwayat_soal: this.riwayatSoal }),
       })
       const json = await res.json()
       if (!json.ok) throw new Error(json.error)
       this.currentSoal  = json.soal
+      this.riwayatSoal.push(json.soal)
+      if (this.riwayatSoal.length > 10) this.riwayatSoal.shift()
       this.currentToken = json.token
       this.soalText.setText(json.soal)
       this.topikLabel.setText(`✦ AI • ${json.topik}`)

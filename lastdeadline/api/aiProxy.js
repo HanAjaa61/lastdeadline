@@ -26,7 +26,7 @@ function groqRequest(messages, maxTokens, model = "llama-3.3-70b-versatile") {
     const payload = JSON.stringify({
       model,
       max_tokens:      maxTokens,
-      temperature:     0.7,
+      temperature:     0.9,
       response_format: { type: "json_object" },
       messages,
     })
@@ -62,6 +62,39 @@ function groqRequest(messages, maxTokens, model = "llama-3.3-70b-versatile") {
   })
 }
 
+const TOPIK_POOL = {
+  1: [
+    "fungsi organ tubuh manusia (jantung, paru-paru, ginjal, hati, otak)",
+    "fakta hewan (mamalia, reptil, serangga, burung, ikan)",
+    "fakta tumbuhan (fotosintesis, bagian tumbuhan, jenis tumbuhan)",
+    "tata surya dan astronomi (planet, bintang, bulan, matahari)",
+    "geografi negara (ibu kota, benua, samudra, negara terbesar/terkecil)",
+    "fenomena alam (gempa bumi, gunung berapi, tsunami, hujan, angin)",
+    "tubuh manusia dan kesehatan (vitamin, tulang, otot, darah)",
+    "hewan langka dan habitat (komodo, harimau, panda, hiu paus)",
+  ],
+  2: [
+    "tokoh penemu dunia (Edison, Newton, Einstein, Fleming, Darwin)",
+    "sejarah Indonesia (kemerdekaan, pahlawan nasional, kerajaan kuno)",
+    "peristiwa bersejarah dunia (Perang Dunia, revolusi, penjelajahan)",
+    "matematika: perkalian dan pembagian angka dua digit",
+    "matematika: pecahan, persentase, dan desimal",
+    "matematika: luas dan keliling bangun datar (persegi, lingkaran, segitiga)",
+    "tokoh ilmuwan Indonesia (Habibie, Soekarno, Ki Hajar Dewantara)",
+    "penemuan penting (listrik, telepon, internet, pesawat, vaksin)",
+  ],
+  3: [
+    "teknologi sehari-hari (cara kerja HP, internet, GPS, satelit)",
+    "kimia dasar (unsur, senyawa, reaksi kimia sederhana, tabel periodik)",
+    "fisika dasar (gaya, energi, cahaya, bunyi, listrik)",
+    "budaya Indonesia (tarian daerah, rumah adat, bahasa daerah)",
+    "ekonomi dasar (inflasi, pasar, supply demand, mata uang)",
+    "lingkungan hidup (daur ulang, ekosistem, pemanasan global)",
+    "bahasa dan sastra Indonesia (peribahasa, majas, arti kata)",
+    "olahraga dan kesehatan (aturan olahraga, rekor dunia, olimpiade)",
+  ],
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin",  "*")
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -76,24 +109,24 @@ export default async function handler(req, res) {
   try {
 
     if (url.includes("generate-soal")) {
-      const { night } = body
-      const seed = Math.floor(Math.random() * 999999)
+      const { night, riwayat_soal } = body
 
-      const topikMap = {
-        1: "sains dasar (fungsi organ tubuh manusia, fakta hewan/tumbuhan, fenomena alam, planet) atau geografi (ibu kota negara, benua, samudra, negara)",
-        2: "sejarah (tokoh penemu, peristiwa bersejarah dunia, pahlawan Indonesia) atau matematika (perkalian, pembagian, pecahan, persentase, luas bangun)",
-        3: "teknologi dan sains (cara kerja teknologi sehari-hari, kimia dasar, fisika dasar) atau budaya dan bahasa (arti kata, peribahasa, tradisi Indonesia)",
-      }
-      const topik = topikMap[night] || topikMap[1]
+      const pool  = TOPIK_POOL[night] || TOPIK_POOL[1]
+      const topik = pool[Math.floor(Math.random() * pool.length)]
+
+      const riwayatText = Array.isArray(riwayat_soal) && riwayat_soal.length > 0
+        ? `\n\nSOAL YANG SUDAH PERNAH DIBUAT (JANGAN BUAT SOAL SERUPA INI):\n${riwayat_soal.slice(-8).map((s, i) => `${i + 1}. ${s}`).join("\n")}`
+        : ""
 
       const result = await groqRequest([
         {
           role: "system",
-          content: `Kamu adalah pembuat soal kuis edukatif yang sangat teliti. Buat soal yang:
+          content: `Kamu adalah pembuat soal kuis edukatif yang kreatif dan sangat teliti. Buat soal yang:
 - Memiliki SATU jawaban yang pasti benar secara fakta dan tidak ambigu
 - Mudah dipahami tapi tetap edukatif dan bermakna
 - Tidak terlalu mudah (hindari soal seperti "apa warna langit", "berapa 2+2")
 - Tidak terlalu teknis atau butuh keahlian profesional khusus
+- BERBEDA dan BERVARIASI — jangan membuat soal yang mirip atau serupa dengan soal yang sudah ada
 
 Contoh soal BAGUS:
 - "Organ tubuh apa yang berfungsi menyaring darah dan menghasilkan urin?"
@@ -102,17 +135,19 @@ Contoh soal BAGUS:
 - "Berapa hasil dari 15 persen dikali 200?"
 - "Gas apa yang paling banyak menyusun atmosfer bumi?"
 - "Pada tahun berapa Indonesia merdeka?"
+- "Apa nama tarian tradisional yang berasal dari Jawa Tengah?"
+- "Berapa jumlah tulang pada tubuh manusia dewasa?"
 
 Setelah membuat soal, verifikasi sendiri bahwa jawaban yang kamu tulis di jawaban_benar memang BENAR secara fakta.
 Balas HANYA dengan JSON.`,
         },
         {
           role: "user",
-          content: `Seed: ${seed}. Buat 1 soal kuis tentang topik: ${topik}.
+          content: `Buat 1 soal kuis tentang topik spesifik: ${topik}.${riwayatText}
 
 Pastikan:
-1. Soal punya jawaban faktual yang jelas
-2. Jawaban benar sudah kamu verifikasi kebenarannya
+1. Soal BERBEDA dari semua soal di daftar riwayat di atas
+2. Soal punya jawaban faktual yang jelas dan sudah diverifikasi
 3. jawaban_benar diisi singkat dan tepat (1-5 kata)
 
 Balas JSON: {"soal":"pertanyaannya disini","topik":"nama topik singkat","jawaban_benar":"jawaban singkat yang benar"}`,
