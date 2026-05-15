@@ -397,7 +397,10 @@ export default class LMSScene extends Phaser.Scene {
   goToScene(key, data = {}) {
     if (this.isTransitioning) return
     this.isTransitioning = true
+    // Selalu cleanup keyboard sebelum pindah scene apapun
     this.cleanupInput()
+    if (this.globalTimer) { this.globalTimer.remove(); this.globalTimer = null }
+    if (this.wifiWatcher) { this.wifiWatcher.remove(); this.wifiWatcher = null }
     if (this.lmsBgm && this.lmsBgm.isPlaying) this.lmsBgm.stop()
     if (key === "ComputerScene") {
       this.scene.stop()
@@ -407,6 +410,7 @@ export default class LMSScene extends Phaser.Scene {
     }
     if (this.gameBgm && this.gameBgm.isPlaying) this.gameBgm.stop()
     this.scene.stop("ComputerScene")
+    this.scene.stop("LMSScene")
     this.scene.start(key, data)
   }
 }
