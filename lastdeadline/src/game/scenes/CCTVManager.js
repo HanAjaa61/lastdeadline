@@ -4,22 +4,23 @@ import GameState from "./GameState"
 const ANOMALY_TIMEOUT_MS = 12000
 
 // Delay spawn (ms) berdasarkan jam malam
+// 12.00 - 1.30 AM  (min 0–90)  : sangat jarang
+// 1.31  - 3.00 AM  (min 91–180): mulai naik
+// 3.01  - 5.00 AM  (min 181+)  : sering
 function getSpawnDelay() {
   const h   = GameState.gameHour === 12 ? 0 : GameState.gameHour
   const min = h * 60 + GameState.gameMinute
-  if (min < 60)  return 8000  + Math.random() * 7000   // 8–15 detik
-  if (min < 120) return 5000  + Math.random() * 5000   // 5–10 detik
-  if (min < 180) return 3000  + Math.random() * 4000   // 3–7 detik
-  return              1500  + Math.random() * 2500      // 1.5–4 detik
+  if (min < 90)  return 40000 + Math.random() * 30000  // 40–70 detik
+  if (min < 180) return 15000 + Math.random() * 15000  // 15–30 detik
+  return               5000  + Math.random() * 8000    // 5–13 detik
 }
 
 // Chance spawn berdasarkan jam malam
 function getChance() {
   const h   = GameState.gameHour === 12 ? 0 : GameState.gameHour
   const min = h * 60 + GameState.gameMinute
-  if (min < 60)  return 0.75
-  if (min < 120) return 0.85
-  if (min < 180) return 0.93
+  if (min < 90)  return 0.35
+  if (min < 180) return 0.70
   return 1.00
 }
 
@@ -78,9 +79,42 @@ const CCTVManager = {
   _spawnAnomaly() {
     this._anomalyActive = true
     this._anomalyHeldMs = 0
-    GameState.recordAnomaliFound()  // nambah insanity tiap anomali muncul
+    GameState.recordAnomaliFound()
     this._notify("spawn")
+    this._playGlobalAnomalySfx()
     this._startAnomalyCountdown()
+  },
+
+  // Play sfx anomali CCTV secara global di scene manapun yang aktif
+  // Dikecualikan: LemariScene, CekPintu (saat anomali pintu aktif), dan scene anomali pintu
+  _playGlobalAnomalySfx() {
+    if (!this._scene) return
+    if (this._paused) return
+
+    const excluded = ["LemariScene", "JumpscareScene", "GameOverScene"]
+    for (const key of excluded) {
+      try { if (this._scene.scene.isActive(key)) return } catch(e) {}
+    }
+
+    // Cek kalau lagi di CekPintu dan anomali pintu sedang aktif — jangan dobel sfx
+    try {
+      if (this._scene.scene.isActive("CekPintu")) return
+    } catch(e) {}
+
+    const targets = [
+      "CCTVScene", "GameScene", "Scene2", "ComputerScene",
+      "LMSScene", "WIFIScene", "GoputScene"
+    ]
+
+    for (const key of targets) {
+      try {
+        if (!this._scene.scene.isActive(key)) continue
+        const sc = this._scene.scene.get(key)
+        if (!sc || !sc.sound) continue
+        sc.sound.play("anomaliSfx", { volume: 0.6 })
+        return
+      } catch(e) {}
+    }
   },
 
   _startAnomalyCountdown() {

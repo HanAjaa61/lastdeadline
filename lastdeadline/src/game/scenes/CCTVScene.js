@@ -10,8 +10,8 @@ const CAMS = [
 ]
 
 const FLICKER_INTERVAL = 120
-const PAN_RANGE = 90   // max pixel geser kiri/kanan
-const CAM_ZOOM  = 1.5 // gambar lebih besar dari layar supaya pan bebas tanpa tepi hitam
+const PAN_RANGE = 60   // max pixel geser kiri/kanan
+const CAM_ZOOM  = 1.18 // gambar lebih besar dari layar supaya pan bebas tanpa tepi hitam
 
 export default class CCTVScene extends Phaser.Scene {
   constructor() {
@@ -503,7 +503,6 @@ export default class CCTVScene extends Phaser.Scene {
       this.camImages[this.currentCam].anomali.setVisible(true)
     }
     this._spawnGlitch()
-    try { this.sound.play("anomaliSfx", { volume: 0.85 }) } catch (e) {}
     this.spectaBg.setFillStyle(0x880000).setStrokeStyle(2, 0xff0000)
     this.spectaTxt.setStyle({ color: "#ff0000", fontSize: "17px", fontFamily: "minecraft" })
   }
