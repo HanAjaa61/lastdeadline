@@ -57,17 +57,24 @@ export default async function handler(req, res) {
   try {
     if (url.includes("generate-soal")) {
       const { night } = body
-      const difficulty = ["mudah", "sedang", "sulit"][(night || 1) - 1]
-      const topik = night === 1
-        ? "pengenalan komputer, perangkat keras, perangkat lunak, atau pengertian dasar pemrograman"
-        : night === 2
-          ? "variabel, tipe data, perulangan, kondisional, atau fungsi dasar pemrograman"
-          : "array, struktur data sederhana, algoritma dasar, atau jaringan komputer dasar"
       const seed = Math.floor(Math.random() * 99999)
 
+      const topikMap = {
+        1: "pilih SALAH SATU secara acak: (1) pengetahuan umum seperti ibu kota negara, nama benua, atau fakta alam sederhana, ATAU (2) matematika dasar seperti penjumlahan, pengurangan, perkalian, atau pembagian bilangan 1-50",
+        2: "pilih SALAH SATU secara acak: (1) sains dasar seperti fungsi organ tubuh, siklus air, atau nama planet, ATAU (2) matematika sedang seperti pecahan sederhana, persen, atau kelipatan bilangan",
+        3: "pilih SALAH SATU secara acak: (1) wawasan umum seperti sejarah singkat, geografi, atau budaya Indonesia, ATAU (2) matematika menengah seperti luas bangun datar sederhana, rata-rata, atau konversi satuan",
+      }
+      const topik = topikMap[night] || topikMap[1]
+
       const result = await groqRequest([
-        { role: "system", content: "Kamu dosen informatika. Buat soal esai singkat untuk mahasiswa semester 1-2. Balas HANYA JSON." },
-        { role: "user",   content: `Seed:${seed}. Buat 1 soal esai SANGAT MUDAH tentang ${topik} untuk mahasiswa baru informatika. Soal harus bisa dijawab dengan 1 kalimat pendek. HANYA buat soal definisi atau perbedaan sederhana. Contoh: "Apa itu CPU?", "Apa perbedaan RAM dan ROM?", "Apa yang dimaksud variabel?", "Sebutkan contoh perangkat input!". JANGAN buat soal analisis, hitungan, atau teori rumit. Balas JSON: {"soal":"tulis soal disini","topik":"nama topik singkat"}` },
+        {
+          role: "system",
+          content: "Kamu pembuat soal kuis harian. Buat soal yang bisa dijawab semua orang tanpa keahlian khusus. Soal matematika harus punya jawaban angka yang pasti. Balas HANYA JSON.",
+        },
+        {
+          role: "user",
+          content: `Seed:${seed}. Buat 1 soal tentang ${topik}. Aturan: soal harus singkat (1 kalimat), bisa dijawab dengan 1-2 kalimat atau 1 angka, JANGAN soal yang butuh keahlian profesional. Contoh soal bagus: "Berapa hasil 24 dikali 7?", "Apa ibu kota negara Jepang?", "Sebutkan 3 planet dalam tata surya!", "Berapa 15% dari 200?", "Organ apa yang memompa darah dalam tubuh manusia?". Balas JSON: {"soal":"tulis soal disini","topik":"nama topik singkat"}`,
+        },
       ], 300)
 
       if (!result?.soal) {
@@ -84,8 +91,14 @@ export default async function handler(req, res) {
       }
 
       const result = await groqRequest([
-        { role: "system", content: "Kamu dosen penilai jawaban mahasiswa. Beri nilai objektif. Balas HANYA JSON." },
-        { role: "user",   content: `Soal: "${soal}"\nJawaban mahasiswa: "${jawaban}"\n\nNilai jawaban ini dari 0-100 berdasarkan kebenaran dan kelengkapan. Balas JSON: {"nilai":75,"feedback":"penjelasan singkat 1 kalimat"}` },
+        {
+          role: "system",
+          content: "Kamu penilai jawaban kuis. Nilai secara objektif tapi murah hati — jawaban yang mendekati benar tetap diberi nilai tinggi. Untuk soal matematika, nilai 100 jika jawaban benar, 0 jika salah. Balas HANYA JSON.",
+        },
+        {
+          role: "user",
+          content: `Soal: "${soal}"\nJawaban: "${jawaban}"\n\nNilai dari 0-100. Untuk soal pengetahuan umum, beri 70+ kalau mendekati benar. Untuk soal matematika, beri 100 kalau benar persis, 0 kalau salah. Balas JSON: {"nilai":75,"feedback":"penjelasan singkat 1 kalimat dalam bahasa Indonesia"}`,
+        },
       ], 200)
 
       if (result?.nilai === undefined) {
