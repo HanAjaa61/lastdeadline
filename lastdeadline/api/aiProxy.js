@@ -1,11 +1,30 @@
 import https from "https"
+import crypto from "crypto"
 
-const API_KEY = process.env.GROQ_API_KEY
+const API_KEY    = process.env.GROQ_API_KEY
+const SECRET_KEY = process.env.QUIZ_SECRET || "lastdeadline-secret-key-2024"
 
-function groqRequest(messages, maxTokens) {
+function encrypt(text) {
+  const iv  = crypto.randomBytes(16)
+  const key = crypto.createHash("sha256").update(SECRET_KEY).digest()
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv)
+  const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()])
+  return iv.toString("hex") + ":" + encrypted.toString("hex")
+}
+
+function decrypt(token) {
+  const [ivHex, encHex] = token.split(":")
+  const iv  = Buffer.from(ivHex, "hex")
+  const key = crypto.createHash("sha256").update(SECRET_KEY).digest()
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv)
+  const decrypted = Buffer.concat([decipher.update(Buffer.from(encHex, "hex")), decipher.final()])
+  return decrypted.toString("utf8")
+}
+
+function groqRequest(messages, maxTokens, model = "llama-3.3-70b-versatile") {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify({
-      model:           "llama-3.1-8b-instant",
+      model,
       max_tokens:      maxTokens,
       temperature:     0.7,
       response_format: { type: "json_object" },
@@ -33,7 +52,7 @@ function groqRequest(messages, maxTokens) {
           const clean  = text.replace(/```json|```/g, "").trim()
           resolve(JSON.parse(clean))
         } catch (e) {
-          reject(e)
+          reject(new Error("Gagal parse response: " + e.message))
         }
       })
     })
@@ -55,95 +74,119 @@ export default async function handler(req, res) {
   const body = req.body
 
   try {
+
     if (url.includes("generate-soal")) {
       const { night } = body
-      const seed = Math.floor(Math.random() * 99999)
+      const seed = Math.floor(Math.random() * 999999)
 
       const topikMap = {
-        1: "sains dasar (tubuh manusia, hewan, tumbuhan, cuaca, bumi) atau geografi (negara, ibu kota, benua, samudra)",
-        2: "sejarah singkat (peristiwa penting, tokoh terkenal, penemuan ilmiah) atau matematika sederhana (perkalian, pecahan, persentase)",
-        3: "ekonomi dasar, teknologi sehari-hari, logika, atau budaya Indonesia dan dunia",
+        1: "sains dasar (fungsi organ tubuh manusia, fakta hewan/tumbuhan, fenomena alam, planet) atau geografi (ibu kota negara, benua, samudra, negara)",
+        2: "sejarah (tokoh penemu, peristiwa bersejarah dunia, pahlawan Indonesia) atau matematika (perkalian, pembagian, pecahan, persentase, luas bangun)",
+        3: "teknologi dan sains (cara kerja teknologi sehari-hari, kimia dasar, fisika dasar) atau budaya dan bahasa (arti kata, peribahasa, tradisi Indonesia)",
       }
       const topik = topikMap[night] || topikMap[1]
 
       const result = await groqRequest([
         {
           role: "system",
-          content: `Kamu adalah pembuat soal kuis edukatif. Tugasmu membuat soal yang:
-- Mudah dipahami semua kalangan tapi tetap edukatif dan bermakna
-- Memiliki jawaban yang PASTI BENAR dan tidak ambigu
-- Bukan soal receh (hindari soal seperti "apa warna langit" atau "berapa 1+1")
-- Bukan soal terlalu teknis atau butuh keahlian profesional
-Contoh soal BAGUS: "Organ tubuh manusia apa yang berfungsi memompa darah ke seluruh tubuh?", "Apa ibu kota negara Jepang?", "Berapa hasil perkalian 12 x 15?", "Gas apa yang paling banyak di atmosfer bumi?", "Siapa penemu bola lampu listrik?"
-Contoh soal BURUK (hindari): "Apa warna langit?", "Berapa 2+2?", "Apa warna daun?", soal yang jawabannya subjektif atau bisa benar/salah tergantung konteks.
-Balas HANYA JSON.`,
+          content: `Kamu adalah pembuat soal kuis edukatif yang sangat teliti. Buat soal yang:
+- Memiliki SATU jawaban yang pasti benar secara fakta dan tidak ambigu
+- Mudah dipahami tapi tetap edukatif dan bermakna
+- Tidak terlalu mudah (hindari soal seperti "apa warna langit", "berapa 2+2")
+- Tidak terlalu teknis atau butuh keahlian profesional khusus
+
+Contoh soal BAGUS:
+- "Organ tubuh apa yang berfungsi menyaring darah dan menghasilkan urin?"
+- "Siapa ilmuwan yang menemukan teori gravitasi dengan kisah apel jatuh?"
+- "Apa nama ibu kota negara Brasil?"
+- "Berapa hasil dari 15 persen dikali 200?"
+- "Gas apa yang paling banyak menyusun atmosfer bumi?"
+- "Pada tahun berapa Indonesia merdeka?"
+
+Setelah membuat soal, verifikasi sendiri bahwa jawaban yang kamu tulis di jawaban_benar memang BENAR secara fakta.
+Balas HANYA dengan JSON.`,
         },
         {
           role: "user",
-          content: `Seed:${seed}. Buat 1 soal kuis tentang ${topik}. Soal harus memiliki jawaban faktual yang jelas dan pasti. Sertakan juga jawaban benarnya agar kamu yakin soalnya valid. Balas JSON: {"soal":"tulis soal disini","topik":"nama topik singkat","jawaban_benar":"jawaban yang benar untuk soal ini"}`,
-        },
-      ], 400)
+          content: `Seed: ${seed}. Buat 1 soal kuis tentang topik: ${topik}.
 
-      if (!result?.soal) {
+Pastikan:
+1. Soal punya jawaban faktual yang jelas
+2. Jawaban benar sudah kamu verifikasi kebenarannya
+3. jawaban_benar diisi singkat dan tepat (1-5 kata)
+
+Balas JSON: {"soal":"pertanyaannya disini","topik":"nama topik singkat","jawaban_benar":"jawaban singkat yang benar"}`,
+        },
+      ], 500)
+
+      if (!result?.soal || !result?.jawaban_benar) {
         res.status(500).json({ ok: false, error: "Gagal generate soal" })
         return
       }
-      res.status(200).json({ ok: true, soal: result.soal, topik: result.topik || topik })
+
+      const token = encrypt(result.jawaban_benar)
+
+      res.status(200).json({
+        ok:    true,
+        soal:  result.soal,
+        topik: result.topik || topik,
+        token,
+      })
 
     } else if (url.includes("nilai-jawaban")) {
-      const { soal, jawaban } = body
-      if (!soal || !jawaban) {
-        res.status(400).json({ ok: false, error: "soal dan jawaban wajib diisi" })
+      const { soal, jawaban, token } = body
+      if (!soal || !jawaban || !token) {
+        res.status(400).json({ ok: false, error: "soal, jawaban, dan token wajib diisi" })
+        return
+      }
+
+      let jawaban_benar
+      try {
+        jawaban_benar = decrypt(token)
+      } catch (e) {
+        res.status(400).json({ ok: false, error: "Token tidak valid" })
         return
       }
 
       const result = await groqRequest([
         {
           role: "system",
-          content: `Kamu adalah penilai jawaban kuis yang sangat teliti dan jujur. Ikuti langkah ini dengan KETAT:
+          content: `Kamu adalah penilai jawaban kuis yang jujur dan teliti.
+Jawaban benar sudah diberikan kepadamu — tugasmu HANYA membandingkan jawaban user dengan jawaban benar tersebut.
+JANGAN menilai berdasarkan opinimu sendiri. Gunakan HANYA jawaban benar yang diberikan sebagai acuan.
 
-LANGKAH 1 - TENTUKAN JAWABAN BENAR:
-Pikirkan sendiri jawaban yang benar untuk soal tersebut berdasarkan fakta yang kamu tahu. Jangan terpengaruh oleh jawaban user.
+Aturan penilaian:
+- Soal MATEMATIKA/HITUNG: nilai 100 jika hasil perhitungan benar, nilai 0 jika salah. Tidak ada nilai tengah.
+- Soal PENGETAHUAN: nilai 90-100 jika inti jawaban sama dengan jawaban benar (typo kecil atau kalimat berbeda tidak masalah). Nilai 40-70 jika mendekati benar tapi kurang lengkap. Nilai 0-30 jika salah atau tidak relevan.
+- Jangan beri nilai tinggi untuk jawaban yang terdengar meyakinkan tapi faktanya berbeda dari jawaban benar.
 
-LANGKAH 2 - BANDINGKAN:
-Bandingkan jawaban user dengan jawaban yang benar dari langkah 1.
-
-LANGKAH 3 - BERI NILAI:
-- Soal MATEMATIKA/HITUNG: Nilai 100 jika benar persis, nilai 0 jika salah. TIDAK ada nilai tengah.
-- Soal PENGETAHUAN: Nilai 90-100 jika inti jawaban benar (typo kecil boleh). Nilai 50-70 jika mendekati benar tapi kurang tepat. Nilai 0-30 jika salah.
-- JANGAN beri nilai tinggi hanya karena jawaban terdengar masuk akal. Harus BENAR secara fakta.
-
-LANGKAH 4 - TULIS FEEDBACK:
-Tulis jawaban yang benar untuk SOAL INI SAJA dalam 1 kalimat pendek. JANGAN menulis jawaban dari soal lain.
-
-PENTING: Kamu harus jujur. Jika jawaban user salah, beri nilai rendah walaupun jawaban user terdengar percaya diri.
 Balas HANYA JSON.`,
         },
         {
           role: "user",
           content: `Soal: "${soal}"
+Jawaban benar: "${jawaban_benar}"
 Jawaban user: "${jawaban}"
 
-Ikuti 4 langkah yang diperintahkan:
-1. Tulis jawaban benar untuk soal ini (dalam pikiranmu)
-2. Bandingkan dengan jawaban user
-3. Tentukan nilai 0-100
-4. Tulis feedback berisi jawaban benar untuk soal ini
+Bandingkan jawaban user dengan jawaban benar. Beri nilai 0-100 sesuai aturan.
+Tulis feedback 1 kalimat singkat berisi jawaban yang benar untuk soal ini.
 
-Balas JSON: {"jawaban_benar_internal":"[jawaban benar menurut kamu]","analisis":"[apakah jawaban user benar atau salah dan kenapa]","nilai":0,"feedback":"[jawaban benar untuk soal ini dalam 1 kalimat]"}`,
+Balas JSON: {"nilai":0,"feedback":"jawaban benar dalam 1 kalimat singkat"}`,
         },
-      ], 400)
+      ], 300)
 
       if (result?.nilai === undefined) {
-        res.status(500).json({ ok: false, error: "Gagal nilai jawaban" })
+        res.status(500).json({ ok: false, error: "Gagal menilai jawaban" })
         return
       }
+
       const nilai = Math.max(0, Math.min(100, Math.round(Number(result.nilai))))
       res.status(200).json({ ok: true, nilai, feedback: result.feedback || "" })
 
     } else {
       res.status(404).end()
     }
+
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message })
   }

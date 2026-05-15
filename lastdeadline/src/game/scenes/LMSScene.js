@@ -12,11 +12,11 @@ export default class LMSScene extends Phaser.Scene {
 
     this.isTransitioning = false
     CCTVManager.attach(this)
-    this.jawabanListener = null
-    this.currentSoal     = null
-    this.isLoadingSoal   = false
-    this.isNilaiing      = false
-    this.jawabanInput    = ""
+    this.currentSoal   = null
+    this.currentToken  = null
+    this.isLoadingSoal = false
+    this.isNilaiing    = false
+    this.jawabanInput  = ""
 
     this.gameBgm = this.playBgm("gameBgm")
     this.lmsBgm  = this.playBgm("lmsBgm")
@@ -60,7 +60,6 @@ export default class LMSScene extends Phaser.Scene {
     this.add.rectangle(formX, tby + 88, formW, 2, 0xcccccc)
 
     const padX  = formX - formW / 2 + 30
-    const padX2 = formX + formW / 2 - 30
     const wrapW = formW - 60
 
     const y1 = tby + 112
@@ -167,8 +166,6 @@ export default class LMSScene extends Phaser.Scene {
   }
 
   setupKeyboard() {
-    // Pakai Phaser keyboard — otomatis di-cleanup saat scene shutdown
-    // tidak perlu window.addEventListener yang rawan double-register
     this.input.keyboard.on("keydown", (e) => {
       if (this.isLoadingSoal || this.isNilaiing) return
       if (!this.currentSoal) return
@@ -193,6 +190,7 @@ export default class LMSScene extends Phaser.Scene {
     if (this.isLoadingSoal) return
     this.isLoadingSoal = true
     this.currentSoal   = null
+    this.currentToken  = null
     this.jawabanInput  = ""
 
     this.soalText.setText("Memuat soal dari AI...")
@@ -213,7 +211,8 @@ export default class LMSScene extends Phaser.Scene {
       })
       const json = await res.json()
       if (!json.ok) throw new Error(json.error)
-      this.currentSoal = json.soal
+      this.currentSoal  = json.soal
+      this.currentToken = json.token
       this.soalText.setText(json.soal)
       this.topikLabel.setText(`✦ AI • ${json.topik}`)
     } catch (e) {
@@ -226,7 +225,7 @@ export default class LMSScene extends Phaser.Scene {
 
   async submitJawaban() {
     if (this.isNilaiing || this.isLoadingSoal) return
-    if (!this.currentSoal) return
+    if (!this.currentSoal || !this.currentToken) return
     if (this.jawabanInput.trim().length === 0) {
       GameState.insanity = Math.min(100, GameState.insanity + 10)
       this.insanityBar.width = (GameState.insanity / 100) * 200
@@ -263,14 +262,18 @@ export default class LMSScene extends Phaser.Scene {
       const res = await fetch("/api/aiProxy?type=nilai-jawaban", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ soal: this.currentSoal, jawaban: this.jawabanInput }),
+        body: JSON.stringify({
+          soal:    this.currentSoal,
+          jawaban: this.jawabanInput,
+          token:   this.currentToken,
+        }),
       })
       const json = await res.json()
       if (!json.ok) throw new Error(json.error)
 
-      const nilai  = json.nilai
-      const benar  = nilai >= 60
-      const poin   = benar ? Math.round(nilai / 2) : 0
+      const nilai = json.nilai
+      const benar = nilai >= 60
+      const poin  = benar ? Math.round(nilai / 2) : 0
 
       if (benar) {
         GameState.poin += poin
@@ -321,8 +324,6 @@ export default class LMSScene extends Phaser.Scene {
   }
 
   cleanupInput() {
-    // Phaser keyboard otomatis cleanup saat scene shutdown
-    // method ini dipertahankan untuk kompatibilitas pemanggilan dari tempat lain
     try { this.input.keyboard.removeAllListeners("keydown") } catch(e) {}
   }
 
@@ -377,20 +378,13 @@ export default class LMSScene extends Phaser.Scene {
     this.cleanupInput()
     if (this.globalTimer) { this.globalTimer.remove(); this.globalTimer = null }
     if (this.wifiWatcher) { this.wifiWatcher.remove(); this.wifiWatcher = null }
-    try { if (this.lmsBgm  && this.lmsBgm.isPlaying)  this.lmsBgm.stop() } catch(e) {}
+    try { if (this.lmsBgm  && this.lmsBgm.isPlaying)  this.lmsBgm.stop()  } catch(e) {}
     try { if (this.gameBgm && this.gameBgm.isPlaying)  this.gameBgm.stop() } catch(e) {}
-    try {
-      const lms = this.sound.get("lmsBgm")
-      const bgm = this.sound.get("gameBgm")
-      if (lms && lms.isPlaying) lms.stop()
-      if (bgm && bgm.isPlaying) bgm.stop()
-    } catch(e) {}
   }
 
   goToScene(key, data = {}) {
     if (this.isTransitioning) return
     this.isTransitioning = true
-    // Selalu cleanup keyboard sebelum pindah scene apapun
     this.cleanupInput()
     if (this.globalTimer) { this.globalTimer.remove(); this.globalTimer = null }
     if (this.wifiWatcher) { this.wifiWatcher.remove(); this.wifiWatcher = null }
