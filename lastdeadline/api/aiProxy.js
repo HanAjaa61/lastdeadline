@@ -1,4 +1,5 @@
-import https from "https"
+export const runtime = "nodejs"
+
 import crypto from "crypto"
 
 const API_KEY    = process.env.GROQ_API_KEY
@@ -21,45 +22,31 @@ function decrypt(token) {
   return decrypted.toString("utf8")
 }
 
-function groqRequest(messages, maxTokens, model = "llama-3.3-70b-versatile") {
-  return new Promise((resolve, reject) => {
-    const payload = JSON.stringify({
+async function groqRequest(messages, maxTokens, model = "llama-3.3-70b-versatile") {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type":  "application/json",
+      "Authorization": `Bearer ${API_KEY}`,
+    },
+    body: JSON.stringify({
       model,
       max_tokens:      maxTokens,
       temperature:     0.9,
       response_format: { type: "json_object" },
       messages,
-    })
-
-    const options = {
-      hostname: "api.groq.com",
-      path:     "/openai/v1/chat/completions",
-      method:   "POST",
-      headers: {
-        "content-type":   "application/json",
-        "content-length": Buffer.byteLength(payload),
-        "authorization":  `Bearer ${API_KEY}`,
-      },
-    }
-
-    const req = https.request(options, (res) => {
-      let data = ""
-      res.on("data", c => { data += c })
-      res.on("end", () => {
-        try {
-          const parsed = JSON.parse(data)
-          const text   = parsed.choices?.[0]?.message?.content || ""
-          const clean  = text.replace(/```json|```/g, "").trim()
-          resolve(JSON.parse(clean))
-        } catch (e) {
-          reject(new Error("Gagal parse response: " + e.message))
-        }
-      })
-    })
-    req.on("error", reject)
-    req.write(payload)
-    req.end()
+    }),
   })
+
+  if (!response.ok) {
+    const errText = await response.text()
+    throw new Error(`Groq API error ${response.status}: ${errText}`)
+  }
+
+  const data  = await response.json()
+  const text  = data.choices?.[0]?.message?.content || ""
+  const clean = text.replace(/```json|```/g, "").trim()
+  return JSON.parse(clean)
 }
 
 const TOPIK_POOL = {
