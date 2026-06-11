@@ -2,53 +2,110 @@ export const runtime = "nodejs"
 
 import crypto from "crypto"
 
-const API_KEY    = process.env.GROQ_API_KEY
+// ─────────────────────────────────────────────────────────────
+//  API KEYS — tambah GROQ_API_KEY_2, _3, dst. di Vercel dashboard
+//  kalau punya lebih banyak key backup
+// ─────────────────────────────────────────────────────────────
+const API_KEYS = [
+  process.env.GROQ_API_KEY,
+  process.env.GROQ_API_KEY_2,
+  process.env.GROQ_API_KEY_3,
+].filter(Boolean) // buang yang kosong/undefined
+
 const SECRET_KEY = process.env.QUIZ_SECRET || "lastdeadline-secret-key-2024"
 
+// ─────────────────────────────────────────────────────────────
+//  Enkripsi / Dekripsi jawaban
+// ─────────────────────────────────────────────────────────────
 function encrypt(text) {
-  const iv  = crypto.randomBytes(16)
-  const key = crypto.createHash("sha256").update(SECRET_KEY).digest()
-  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv)
+  const iv      = crypto.randomBytes(16)
+  const key     = crypto.createHash("sha256").update(SECRET_KEY).digest()
+  const cipher  = crypto.createCipheriv("aes-256-cbc", key, iv)
   const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()])
   return iv.toString("hex") + ":" + encrypted.toString("hex")
 }
 
 function decrypt(token) {
   const [ivHex, encHex] = token.split(":")
-  const iv  = Buffer.from(ivHex, "hex")
-  const key = crypto.createHash("sha256").update(SECRET_KEY).digest()
+  const iv      = Buffer.from(ivHex, "hex")
+  const key     = crypto.createHash("sha256").update(SECRET_KEY).digest()
   const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv)
   const decrypted = Buffer.concat([decipher.update(Buffer.from(encHex, "hex")), decipher.final()])
   return decrypted.toString("utf8")
 }
 
+// ─────────────────────────────────────────────────────────────
+//  Groq request dengan backup API key otomatis
+//  Kalau key pertama kena rate limit (429), otomatis coba key berikutnya.
+//  Kalau semua key sudah dicoba dan semua kena limit, baru lempar error.
+// ─────────────────────────────────────────────────────────────
 async function groqRequest(messages, maxTokens, model = "llama-3.3-70b-versatile") {
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type":  "application/json",
-      "Authorization": `Bearer ${API_KEY}`,
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens:      maxTokens,
-      temperature:     0.9,
-      response_format: { type: "json_object" },
-      messages,
-    }),
-  })
-
-  if (!response.ok) {
-    const errText = await response.text()
-    throw new Error(`Groq API error ${response.status}: ${errText}`)
+  if (API_KEYS.length === 0) {
+    throw new Error("Tidak ada GROQ_API_KEY yang dikonfigurasi di environment variable.")
   }
 
-  const data  = await response.json()
-  const text  = data.choices?.[0]?.message?.content || ""
-  const clean = text.replace(/```json|```/g, "").trim()
-  return JSON.parse(clean)
+  let lastError
+
+  for (let i = 0; i < API_KEYS.length; i++) {
+    const apiKey = API_KEYS[i]
+    const keyLabel = i === 0 ? "utama" : `backup-${i}`
+
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens:      maxTokens,
+          temperature:     0.9,
+          response_format: { type: "json_object" },
+          messages,
+        }),
+      })
+
+      // Rate limit → coba key berikutnya
+      if (response.status === 429) {
+        console.warn(`[Groq] API key ${keyLabel} kena rate limit (429), mencoba key berikutnya...`)
+        lastError = new Error(`API key ${keyLabel} kena rate limit (429)`)
+        continue
+      }
+
+      // Error lain dari Groq (400, 401, 500, dst.) → langsung throw, tidak perlu coba key lain
+      if (!response.ok) {
+        const errText = await response.text()
+        throw new Error(`Groq API error ${response.status} (key ${keyLabel}): ${errText}`)
+      }
+
+      // Sukses
+      if (i > 0) {
+        console.log(`[Groq] Berhasil menggunakan API key ${keyLabel}`)
+      }
+
+      const data  = await response.json()
+      const text  = data.choices?.[0]?.message?.content || ""
+      const clean = text.replace(/```json|```/g, "").trim()
+      return JSON.parse(clean)
+
+    } catch (e) {
+      // Kalau error ini bukan dari blok rate-limit di atas (misalnya network error),
+      // langsung lempar tanpa mencoba key berikutnya
+      if (!e.message.includes("rate limit")) throw e
+      lastError = e
+    }
+  }
+
+  // Semua key sudah dicoba, semua kena rate limit
+  throw new Error(
+    `Semua API key Groq (${API_KEYS.length} key) sedang kena rate limit. Coba lagi beberapa saat.`
+  )
 }
 
+// ─────────────────────────────────────────────────────────────
+//  Pool topik kuis berdasarkan malam/level
+// ─────────────────────────────────────────────────────────────
 const TOPIK_POOL = {
   1: [
     "fungsi organ tubuh manusia (jantung, paru-paru, ginjal, hati, otak)",
@@ -82,6 +139,9 @@ const TOPIK_POOL = {
   ],
 }
 
+// ─────────────────────────────────────────────────────────────
+//  Handler utama Vercel Serverless
+// ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin",  "*")
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -91,10 +151,11 @@ export default async function handler(req, res) {
   if (req.method !== "POST")    { res.status(404).end(); return }
 
   const { url } = req
-  const body = req.body
+  const body    = req.body
 
   try {
 
+    // ── Generate Soal ────────────────────────────────────────
     if (url.includes("generate-soal")) {
       const { night, riwayat_soal } = body
 
@@ -155,8 +216,10 @@ Balas JSON: {"soal":"pertanyaannya disini","topik":"nama topik singkat","jawaban
         token,
       })
 
+    // ── Nilai Jawaban ────────────────────────────────────────
     } else if (url.includes("nilai-jawaban")) {
       const { soal, jawaban, token } = body
+
       if (!soal || !jawaban || !token) {
         res.status(400).json({ ok: false, error: "soal, jawaban, dan token wajib diisi" })
         return
