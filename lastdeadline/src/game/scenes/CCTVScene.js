@@ -283,7 +283,7 @@ export default class CCTVScene extends Phaser.Scene {
     this._noiseOverlay = this.add.rectangle(screenX, screenY, screenW, screenH, 0x000000, 1).setDepth(8)
     if (this.cache.video && this.cache.video.has("cctvNoise")) {
       this._noiseLoopVideo = this.add.video(screenX, screenY, "cctvNoise")
-        .setDisplaySize(screenW, screenH).setDepth(9)
+        .setDisplaySize(screenW, screenH).setDepth(15)
       this._noiseLoopVideo.play(true)
     }
     this._noiseQText = this.add.text(screenX, screenY + screenH / 2 - 40, "[ Q ] Kembali", {
