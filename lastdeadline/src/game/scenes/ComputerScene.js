@@ -273,10 +273,10 @@ export default class ComputerScene extends Phaser.Scene {
   }
 
   scheduleWifiEvent() {
-    const delay = Phaser.Math.Between(90000, 180000)
+    const delay = Phaser.Math.Between(5000, 10000)
     this.time.delayedCall(delay, () => {
       if (!this.scene.isActive("ComputerScene")) return
-      if (!GameState.wifiGanggu && Math.random() < 0.30) {
+      if (!GameState.wifiGanggu && Math.random() < 0.90) {
         GameState.wifiGanggu = true
         this.updateHUD()
         this.showNotif("Gangguan jaringan terdeteksi !", "#ff4444")
