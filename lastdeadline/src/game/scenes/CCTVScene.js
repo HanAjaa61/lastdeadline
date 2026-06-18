@@ -254,6 +254,10 @@ export default class CCTVScene extends Phaser.Scene {
         }
       }
     })
+
+    if (GameState.wifiGanggu) {
+      this._showNoiseInterrupt()
+    }
   }
 
   _startCamPan() {
