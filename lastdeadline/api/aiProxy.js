@@ -7,7 +7,6 @@ import crypto from "crypto"
 //  kalau punya lebih banyak key backup
 // ─────────────────────────────────────────────────────────────
 const API_KEYS = [
-  process.env.GROQ_API_KEY,
   process.env.GROQ_API_KEY_2,
   process.env.GROQ_API_KEY_3,
 ].filter(Boolean) // buang yang kosong/undefined
